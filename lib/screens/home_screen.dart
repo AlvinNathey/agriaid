@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 
-
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -114,6 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Text('Please fill in all sensor readings'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -135,7 +136,19 @@ class _HomeScreenState extends State<HomeScreen> {
         context: context,
         barrierDismissible: false,
         builder: (context) => Center(
-          child: CircularProgressIndicator(),
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: Colors.green[700]),
+                  SizedBox(height: 16),
+                  Text('Recording data...'),
+                ],
+              ),
+            ),
+          ),
         ),
       );
 
@@ -159,8 +172,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sensor reading recorded successfully!'),
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Sensor reading recorded successfully!'),
+            ],
+          ),
           backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
 
@@ -171,80 +192,180 @@ class _HomeScreenState extends State<HomeScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text('Error: ${e.toString()}')),
+            ],
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
   }
 
-  void _showRecordDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.sensors, color: Colors.green[700]),
-              SizedBox(width: 8),
-              Text('Record Sensor Data'),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _temperatureController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Temp (°C)',
-                    prefixIcon: Icon(Icons.thermostat),
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g., 25.5',
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _humidityController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Humidity (%)',
-                    prefixIcon: Icon(Icons.water_drop),
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g., 65.0',
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _soilMoistureController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Soil Moisture (%)',
-                    prefixIcon: Icon(Icons.grass),
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g., 45.0',
-                  ),
-                ),
-              ],
+void _showRecordDialog() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: _recordReading,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.sensors,
+                      color: Colors.green[700],
+                      size: 32,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Record Sensor Data',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  _buildInputField(
+                    controller: _temperatureController,
+                    label: 'Temperature',
+                    unit: '°C',
+                    icon: Icons.thermostat,
+                    iconColor: Colors.orange,
+                    hint: 'e.g., 25.5',
+                  ),
+                  SizedBox(height: 16),
+                  _buildInputField(
+                    controller: _humidityController,
+                    label: 'Humidity',
+                    unit: '%',
+                    icon: Icons.water_drop,
+                    iconColor: Colors.blue,
+                    hint: 'e.g., 65.0',
+                  ),
+                  SizedBox(height: 16),
+                  _buildInputField(
+                    controller: _soilMoistureController,
+                    label: 'Soil Moisture',
+                    unit: '%',
+                    icon: Icons.grass,
+                    iconColor: Colors.brown,
+                    hint: 'e.g., 45.0',
+                  ),
+                  SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.grey[300]!),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _recordReading,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: Text(
+                            'Record',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              child: Text('Record'),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required String unit,
+    required IconData icon,
+    required Color iconColor,
+    required String hint,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: '$label ($unit)',
+          hintText: hint,
+          prefixIcon: Container(
+            margin: EdgeInsets.all(12),
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          labelStyle: TextStyle(
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 
@@ -253,20 +374,30 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Sign Out'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Sign Out'),
+            ],
+          ),
           content: Text('Are you sure you want to sign out?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _authService.signOut();
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
               child: Text('Sign Out'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
             ),
           ],
         );
@@ -286,200 +417,172 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
-      appBar: AppBar(
-        title: Text(
-          'AgriAid Monitor',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.analytics),
-            onPressed: _navigateToAnalytics,
-            tooltip: 'View Analytics',
-          ),
-          PopupMenuButton(
-            icon: Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'logout') {
-                _signOut();
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Sign Out'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      backgroundColor: Colors.grey[50],
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.green[700]),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading your farm data...',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : RefreshIndicator(
               onRefresh: () async {
                 await _loadUserData();
                 await _loadLatestReadings();
               },
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.all(16.0),
+              color: Colors.green[700],
+              child: CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(),
+                  SliverPadding(
+                    padding: EdgeInsets.all(20),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _buildQuickActionsSection(),
+                        SizedBox(height: 32),
+                        _buildLatestReadingsSection(),
+                        SizedBox(height: 32),
+                        _buildStatusOverview(),
+                        SizedBox(height: 100), // Extra padding at bottom
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+ Widget _buildSliverAppBar() {
+  return SliverAppBar(
+    expandedHeight: 100, // keep as requested
+    floating: false,
+    pinned: true,
+    backgroundColor: Colors.green[700],
+    foregroundColor: Colors.white,
+    elevation: 0,
+    actions: [
+      IconButton(
+        icon: Icon(Icons.analytics_outlined),
+        onPressed: _navigateToAnalytics,
+        tooltip: 'View Analytics',
+      ),
+      PopupMenuButton(
+        icon: Icon(Icons.more_vert),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onSelected: (value) {
+          if (value == 'logout') {
+            _signOut();
+          }
+        },
+        itemBuilder: (BuildContext context) => [
+          PopupMenuItem(
+            value: 'logout',
+            child: Row(
+              children: [
+                Icon(Icons.logout, color: Colors.red),
+                SizedBox(width: 12),
+                Text('Sign Out'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ],
+    flexibleSpace: LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        // When collapsed, the top padding will shrink, so we can toggle visibility
+        final bool isCollapsed = constraints.maxHeight <= kToolbarHeight + 20;
+
+        return FlexibleSpaceBar(
+          centerTitle: true,
+          titlePadding: isCollapsed
+              ? EdgeInsets.only(bottom: 12)
+              : EdgeInsets.zero, // hide title when expanded
+          title: isCollapsed
+              ? Text(
+                  'AgriAid',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                )
+              : null,
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.green[600]!, Colors.green[800]!],
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _buildWelcomeCard(),
-                    SizedBox(height: 24),
-                    _buildLatestReadingsSection(),
-                    SizedBox(height: 24),
-                    _buildQuickActionsSection(),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.eco,
+                            size: 28,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hello, ${userData?['fullName']?.split(' ')[0] ?? 'Farmer'}!',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Monitor your farm conditions',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildWelcomeCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [Colors.green[400]!, Colors.green[600]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white.withOpacity(0.3),
-                  child: Icon(
-                    Icons.agriculture,
-                    size: 35,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Welcome back!',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        userData?['fullName'] ?? 'Farmer',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Monitor your farm\'s environmental conditions',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLatestReadingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Latest Readings',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.green[800],
-          ),
-        ),
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSensorCard(
-                title: 'Temp',
-                value: latestReadings?['temperature']?.toStringAsFixed(1) ?? '--',
-                unit: '°C',
-                icon: Icons.thermostat,
-                color: Colors.orange,
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: _buildSensorCard(
-                title: 'Humidity',
-                value: latestReadings?['humidity']?.toStringAsFixed(1) ?? '--',
-                unit: '%',
-                icon: Icons.water_drop,
-                color: Colors.blue,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12),
-        _buildSensorCard(
-          title: 'Soil Moisture',
-          value: latestReadings?['soilMoisture']?.toStringAsFixed(1) ?? '--',
-          unit: '%',
-          icon: Icons.grass,
-          color: Colors.brown,
-          isFullWidth: true,
-        ),
-        
-        if (latestReadings != null) 
-          Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text(
-              'Last updated: ${_formatTimestamp(latestReadings!['timestamp'])}',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-      ],
-    );
-  }
-
+        );
+      },
+    ),
+  );
+}
   Widget _buildQuickActionsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,43 +590,31 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           'Quick Actions',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.green[800],
+            color: Colors.grey[800],
           ),
         ),
         SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _showRecordDialog,
-                icon: Icon(Icons.add_circle_outline),
-                label: Text('Record Data'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              child: _buildActionCard(
+                title: 'Record Data',
+                subtitle: 'Add new readings',
+                icon: Icons.add_circle_outline,
+                color: Colors.green,
+                onTap: _showRecordDialog,
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: 10),
             Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _navigateToAnalytics,
-                icon: Icon(Icons.analytics),
-                label: Text('View Analytics'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[700],
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              child: _buildActionCard(
+                title: 'Analytics',
+                subtitle: 'View trends',
+                icon: Icons.bar_chart,
+                color: Colors.blue,
+                onTap: _navigateToAnalytics,
               ),
             ),
           ],
@@ -532,84 +623,391 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSensorCard({
-    required String title,
-    required String value,
-    required String unit,
-    required IconData icon,
-    required Color color,
-    bool isFullWidth = false,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+ Widget _buildActionCard({
+  required String title,
+  required String subtitle,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
-      child: Container(
-        width: isFullWidth ? double.infinity : null,
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: color,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildLatestReadingsSection() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Current Conditions',
+            style: TextStyle(
+              fontSize: 20, // reduced from 22
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          if (latestReadings != null)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4), // reduced padding
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(16), // reduced radius
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6, // reduced from 8
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(width: 4), // reduced from 6
+                  Text(
+                    'Live',
+                    style: TextStyle(
+                      color: Colors.green[700],
+                      fontSize: 11, // reduced from 12
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      SizedBox(height: 10), // reduced from 16
+      if (latestReadings == null)
+        _buildNoDataCard()
+      else
+        Column(
           children: [
             Row(
               children: [
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 20,
-                    color: color,
+                Expanded(
+                  child: _buildSensorCard(
+                    title: 'Temperature',
+                    value: latestReadings!['temperature']?.toStringAsFixed(1) ?? '--',
+                    unit: '°C',
+                    icon: Icons.thermostat,
+                    color: Colors.orange,
+                    trend: _getTrend('temperature'),
+                    // The card itself will be smaller by modifying _buildSensorCard
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: 10), // reduced from 16
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  child: _buildSensorCard(
+                    title: 'Humidity',
+                    value: latestReadings!['humidity']?.toStringAsFixed(1) ?? '--',
+                    unit: '%',
+                    icon: Icons.water_drop,
+                    color: Colors.blue,
+                    trend: _getTrend('humidity'),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Flexible(
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+            SizedBox(height: 10), // reduced from 16
+            _buildSensorCard(
+              title: 'Soil Moisture',
+              value: latestReadings!['soilMoisture']?.toStringAsFixed(1) ?? '--',
+              unit: '%',
+              icon: Icons.grass,
+              color: Colors.brown,
+              isFullWidth: true,
+              trend: _getTrend('soilMoisture'),
+            ),
+            SizedBox(height: 8), // reduced from 12
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6), // reduced padding
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16), // reduced radius
+              ),
+              child: Text(
+                'Last updated: ${_formatTimestamp(latestReadings!['timestamp'])}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 11, // reduced from 12
+                  fontWeight: FontWeight.w500,
                 ),
-                SizedBox(width: 4),
+              ),
+            ),
+          ],
+        ),
+    ],
+  );
+}
+
+  Widget _buildNoDataCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.sensors_off,
+              size: 32,
+              color: Colors.grey[500],
+            ),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No sensor data available',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Record your first sensor reading to start monitoring',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+ Widget _buildStatusOverview() {
+  if (latestReadings == null) return SizedBox.shrink();
+
+  final temp = latestReadings!['temperature'] ?? 0;
+  final humidity = latestReadings!['humidity'] ?? 0;
+  final soilMoisture = latestReadings!['soilMoisture'] ?? 0;
+
+  String status = 'Optimal';
+  Color statusColor = Colors.green;
+  IconData statusIcon = Icons.check_circle;
+
+  if (temp < 15 || temp > 35 || humidity < 40 || humidity > 80 || soilMoisture < 30) {
+    status = 'Needs Attention';
+    statusColor = Colors.orange;
+    statusIcon = Icons.warning;
+  }
+
+  if (temp < 10 || temp > 40 || humidity < 20 || humidity > 90 || soilMoisture < 20) {
+    status = 'Critical';
+    statusColor = Colors.red;
+    statusIcon = Icons.error;
+  }
+
+  return Transform.translate(
+    offset: Offset(0, -30), // move up by 30 logical pixels (≈ 30%)
+    child: Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              statusIcon,
+              color: statusColor,
+              size: 24,
+            ),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  unit,
+                  'Farm Status',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  );
+}
+
+  Widget _buildSensorCard({
+  required String title,
+  required String value,
+  required String unit,
+  required IconData icon,
+  required Color color,
+  String? trend,
+  bool isFullWidth = false,
+}) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14), // match action card padding
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 6,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    width: isFullWidth ? double.infinity : null,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            size: 22, // smaller icon
+            color: color,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          '$value $unit',
+          style: TextStyle(
+            fontSize: 14, // reduced
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[800],
+          ),
+        ),
+        SizedBox(height: 2),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 11, // reduced
+            color: Colors.grey[600],
+          ),
+          textAlign: TextAlign.center,
+        ),
+        if (trend != null) ...[
+          SizedBox(height: 4),
+          Text(
+            'Trend: $trend',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[500],
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ]
+      ],
+    ),
+  );
+}
+
+  String? _getTrend(String sensorType) {
+    // This is a placeholder for trend calculation
+    // You would implement actual trend calculation based on historical data
+    return null; // Return something like '+2.1°' or 'stable' based on your logic
   }
 
   String _formatTimestamp(dynamic timestamp) {
