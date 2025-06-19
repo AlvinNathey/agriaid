@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1039035121880",
+    "project_id": "agiaid-iot",
+    "storage_bucket": "agiaid-iot.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1039035121880:android:92a481066ef2e125af97ad",
+        "android_client_info": {
+          "package_name": "com.example.agriaid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCX5CTJ1NWrCV7XaYqQEukedSHTXKcr9wk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
