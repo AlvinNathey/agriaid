@@ -595,19 +595,9 @@ void _showRecordDialog() {
             color: Colors.grey[800],
           ),
         ),
-        SizedBox(height: 16),
+        SizedBox(height: 9),
         Row(
           children: [
-            Expanded(
-              child: _buildActionCard(
-                title: 'Record Data',
-                subtitle: 'Add new readings',
-                icon: Icons.add_circle_outline,
-                color: Colors.green,
-                onTap: _showRecordDialog,
-              ),
-            ),
-            SizedBox(width: 10),
             Expanded(
               child: _buildActionCard(
                 title: 'Analytics',
@@ -876,7 +866,7 @@ Widget _buildLatestReadingsSection() {
     offset: Offset(0, -30), // move up by 30 logical pixels (≈ 30%)
     child: Container(
       padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: BoxDecoration(      
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
